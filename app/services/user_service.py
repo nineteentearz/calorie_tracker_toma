@@ -1,4 +1,3 @@
-# app/services/user_service.py
 from uuid import UUID
 from ..domain.repositories import UserRepository, ProfileRepository
 from ..utils.exceptions import NotFoundError
@@ -13,7 +12,24 @@ class UserService:
         if not user:
             raise NotFoundError("User not found")
         profile = self.profile_repo.get_by_user_id(user_id)
-        return {"email": user.email, **profile.__dict__ if profile else {}}
+        result = {"email": user.email}
+        if profile:
+            result.update({
+                "height_cm": profile.height_cm,
+                "weight_kg": profile.weight_kg,
+                "age": profile.age,
+                "gender": profile.gender,
+                "daily_calorie_goal": profile.daily_calorie_goal,
+            })
+        else:
+            result.update({
+                "height_cm": None,
+                "weight_kg": None,
+                "age": None,
+                "gender": None,
+                "daily_calorie_goal": 2000,
+            })
+        return result
 
     def update_profile(self, user_id: UUID, **kwargs):
         profile = self.profile_repo.get_by_user_id(user_id)

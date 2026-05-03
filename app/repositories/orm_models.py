@@ -1,4 +1,3 @@
-# app/repositories/orm_models.py
 from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, ForeignKey
 from sqlalchemy.dialects.sqlite import UUID as SQLiteUUID
 from sqlalchemy.orm import relationship
@@ -35,7 +34,7 @@ class MealEntryModel(Base):
     user_id = Column(SQLiteUUID, ForeignKey("users.id"), nullable=False)
     product_name = Column(String, nullable=False)
     calories = Column(Integer, nullable=False)
-    date = Column(DateTime, nullable=False)  # дата приёма
+    date = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("UserModel", back_populates="meals")

@@ -1,4 +1,3 @@
-# app/utils/logging.py
 import logging
 from ..config import LOG_FILE
 
@@ -8,8 +7,7 @@ def setup_logging():
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         handlers=[
             logging.FileHandler(LOG_FILE),
-            logging.StreamHandler()  # можно убрать, если не нужен вывод в консоль
+            logging.StreamHandler()
         ]
     )
-    # Подавляем логи SQLAlchemy, кроме ошибок
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)

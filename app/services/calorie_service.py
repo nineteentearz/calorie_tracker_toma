@@ -1,5 +1,4 @@
-# app/services/calorie_service.py
-from datetime import date
+from datetime import date, timedelta
 from uuid import UUID
 from collections import defaultdict
 from ..domain.repositories import MealEntryRepository

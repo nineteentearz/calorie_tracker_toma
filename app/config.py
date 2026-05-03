@@ -8,9 +8,7 @@ LOG_FILE = BASE_DIR / "calorie_tracker.log"
 
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
-# Параметры tenacity (повторы при блокировке БД)
 DB_RETRY_MAX = 3
 DB_RETRY_WAIT = 0.5
 
-# bcrypt rounds
 BCRYPT_ROUNDS = 12

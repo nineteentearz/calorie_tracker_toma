@@ -1,4 +1,3 @@
-# app/utils/security.py
 import bcrypt
 from ..config import BCRYPT_ROUNDS
 

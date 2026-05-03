@@ -1,4 +1,3 @@
-# app/services/auth_service.py
 from uuid import uuid4
 from datetime import datetime
 from ..domain.models import User, Profile

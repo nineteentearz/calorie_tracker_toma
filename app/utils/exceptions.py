@@ -1,6 +1,5 @@
-# app/utils/exceptions.py
 class CalorieTrackerError(Exception):
-    """Базовое исключение приложения"""
+    pass
 
 class UserAlreadyExistsError(CalorieTrackerError):
     pass
