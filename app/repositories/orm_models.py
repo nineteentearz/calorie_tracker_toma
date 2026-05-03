@@ -1,5 +1,4 @@
 from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, ForeignKey
-from sqlalchemy.dialects.sqlite import UUID as SQLiteUUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from uuid import uuid4
@@ -7,7 +6,7 @@ from .database import Base
 
 class UserModel(Base):
     __tablename__ = "users"
-    id = Column(SQLiteUUID, primary_key=True, default=uuid4)
+    id = Column(String, primary_key=True, default=lambda: str(uuid4()))
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -18,7 +17,7 @@ class UserModel(Base):
 
 class ProfileModel(Base):
     __tablename__ = "profiles"
-    user_id = Column(SQLiteUUID, ForeignKey("users.id"), primary_key=True)
+    user_id = Column(String, ForeignKey("users.id"), primary_key=True)
     height_cm = Column(Float, nullable=True)
     weight_kg = Column(Float, nullable=True)
     age = Column(Integer, nullable=True)
@@ -30,8 +29,8 @@ class ProfileModel(Base):
 
 class MealEntryModel(Base):
     __tablename__ = "meal_entries"
-    id = Column(SQLiteUUID, primary_key=True, default=uuid4)
-    user_id = Column(SQLiteUUID, ForeignKey("users.id"), nullable=False)
+    id = Column(String, primary_key=True, default=lambda: str(uuid4()))
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
     product_name = Column(String, nullable=False)
     calories = Column(Integer, nullable=False)
     date = Column(DateTime, nullable=False)
