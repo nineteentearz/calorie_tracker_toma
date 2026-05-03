@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "calorie-tracker"
+version = "0.1.0"
+description = "CLI calorie tracker with auth, progress, reporting"
+authors = [{ name = "You", email = "local@example.com" }]
+dependencies = [
+    "click>=8.1.0",
+    "rich>=13.7.0",
+    "sqlalchemy>=2.0.0",
+    "bcrypt>=4.1.0",
+    "python-dateutil>=2.8.2",
+    "tenacity>=8.2.0",
+]
+requires-python = ">=3.12"
+
+[project.scripts]
+calorie-tracker = "app.cli.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = false
+disallow_untyped_defs = true
+disallow_any_unimported = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "C", "B", "UP", "RUF"]

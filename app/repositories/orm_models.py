@@ -1,0 +1,41 @@
+# app/repositories/orm_models.py
+from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, ForeignKey
+from sqlalchemy.dialects.sqlite import UUID as SQLiteUUID
+from sqlalchemy.orm import relationship
+from datetime import datetime
+from uuid import uuid4
+from .database import Base
+
+class UserModel(Base):
+    __tablename__ = "users"
+    id = Column(SQLiteUUID, primary_key=True, default=uuid4)
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    is_active = Column(Boolean, default=True)
+
+    profile = relationship("ProfileModel", back_populates="user", uselist=False)
+    meals = relationship("MealEntryModel", back_populates="user")
+
+class ProfileModel(Base):
+    __tablename__ = "profiles"
+    user_id = Column(SQLiteUUID, ForeignKey("users.id"), primary_key=True)
+    height_cm = Column(Float, nullable=True)
+    weight_kg = Column(Float, nullable=True)
+    age = Column(Integer, nullable=True)
+    gender = Column(String, nullable=True)
+    daily_calorie_goal = Column(Integer, nullable=False, default=2000)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = relationship("UserModel", back_populates="profile")
+
+class MealEntryModel(Base):
+    __tablename__ = "meal_entries"
+    id = Column(SQLiteUUID, primary_key=True, default=uuid4)
+    user_id = Column(SQLiteUUID, ForeignKey("users.id"), nullable=False)
+    product_name = Column(String, nullable=False)
+    calories = Column(Integer, nullable=False)
+    date = Column(DateTime, nullable=False)  # дата приёма
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("UserModel", back_populates="meals")

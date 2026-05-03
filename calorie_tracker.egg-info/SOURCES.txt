@@ -1,0 +1,13 @@
+pyproject.toml
+app/__init__.py
+app/cli/__init__.py
+app/domain/__init__.py
+app/repositories/__init__.py
+app/services/__init__.py
+app/utils/__init__.py
+calorie_tracker.egg-info/PKG-INFO
+calorie_tracker.egg-info/SOURCES.txt
+calorie_tracker.egg-info/dependency_links.txt
+calorie_tracker.egg-info/entry_points.txt
+calorie_tracker.egg-info/requires.txt
+calorie_tracker.egg-info/top_level.txt
