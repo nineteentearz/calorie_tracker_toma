@@ -1,8 +1,11 @@
-#!/usr/bin/env python3
 """
-Точка входа в графическое приложение.
+Точка входа в GUI приложение.
 """
+from .controllers import AppController
 from .auth_window import run_auth
 
-if __name__ == "__main__":
+def main():
     run_auth()
+
+if __name__ == "__main__":
+    main()

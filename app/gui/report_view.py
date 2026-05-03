@@ -1,80 +1,85 @@
 import customtkinter as ctk
-from datetime import date, timedelta
-from tkinter import messagebox
-import matplotlib.pyplot as plt
+from tkcalendar import DateEntry
+from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from datetime import date, timedelta
 
 
 class ReportView(ctk.CTkFrame):
+    """Вкладка с графиком калорий за выбранный период."""
+
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
-
-        # Переменные
-        self.start_date = date.today() - timedelta(days=7)
-        self.end_date = date.today()
+        self.pack(fill="both", expand=True, padx=20, pady=20)
 
         # Заголовок
-        self.label_title = ctk.CTkLabel(
-            self, text="Диаграмма калорий за период", font=ctk.CTkFont(size=20, weight="bold")
+        self.title_label = ctk.CTkLabel(
+            self, text="Диаграмма калорий", font=ctk.CTkFont(size=20, weight="bold")
         )
-        self.label_title.pack(pady=10)
+        self.title_label.pack(pady=(10, 10))
 
         # Фрейм для выбора периода
-        filter_frame = ctk.CTkFrame(self)
-        filter_frame.pack(pady=10, padx=20, fill="x")
+        period_frame = ctk.CTkFrame(self)
+        period_frame.pack(pady=10)
 
-        ctk.CTkLabel(filter_frame, text="С даты:").grid(row=0, column=0, padx=5, pady=5)
-        self.start_var = ctk.StringVar(value=self.start_date.isoformat())
-        self.start_entry = ctk.CTkEntry(filter_frame, textvariable=self.start_var, width=100)
-        self.start_entry.grid(row=0, column=1, padx=5, pady=5)
+        self.start_label = ctk.CTkLabel(period_frame, text="С:")
+        self.start_label.grid(row=0, column=0, padx=5)
+        self.start_date = DateEntry(period_frame, width=10, date_pattern='yyyy-mm-dd')
+        self.start_date.grid(row=0, column=1, padx=5)
 
-        ctk.CTkLabel(filter_frame, text="По дату:").grid(row=0, column=2, padx=5, pady=5)
-        self.end_var = ctk.StringVar(value=self.end_date.isoformat())
-        self.end_entry = ctk.CTkEntry(filter_frame, textvariable=self.end_var, width=100)
-        self.end_entry.grid(row=0, column=3, padx=5, pady=5)
+        self.end_label = ctk.CTkLabel(period_frame, text="По:")
+        self.end_label.grid(row=0, column=2, padx=5)
+        self.end_date = DateEntry(period_frame, width=10, date_pattern='yyyy-mm-dd')
+        self.end_date.grid(row=0, column=3, padx=5)
 
-        self.update_btn = ctk.CTkButton(filter_frame, text="Обновить график", command=self.update_chart)
-        self.update_btn.grid(row=0, column=4, padx=10, pady=5)
+        self.show_btn = ctk.CTkButton(period_frame, text="Построить", command=self.plot_calories)
+        self.show_btn.grid(row=0, column=4, padx=10)
+
+        # Метка для отображения ошибок
+        self.error_label = ctk.CTkLabel(self, text="", text_color="red")
+        self.error_label.pack(pady=5)
 
         # Фрейм для графика
-        self.chart_frame = ctk.CTkFrame(self)
-        self.chart_frame.pack(pady=10, padx=20, fill="both", expand=True)
+        self.figure_frame = ctk.CTkFrame(self)
+        self.figure_frame.pack(fill="both", expand=True, pady=20)
 
-        self.figure = plt.Figure(figsize=(8, 4), dpi=100)
-        self.ax = self.figure.add_subplot(111)
-        self.canvas = FigureCanvasTkAgg(self.figure, master=self.chart_frame)
-        self.canvas.get_tk_widget().pack(fill="both", expand=True)
+        # По умолчанию покажем график за последние 7 дней
+        self.end_date.set_date(date.today())
+        self.start_date.set_date(date.today() - timedelta(days=6))
+        self.plot_calories()
 
-        # Загружаем начальные данные
-        self.update_chart()
-
-    def update_chart(self):
-        try:
-            start = date.fromisoformat(self.start_var.get().strip())
-            end = date.fromisoformat(self.end_var.get().strip())
-            if start > end:
-                messagebox.showwarning("Ошибка", "Начальная дата не может быть позже конечной.")
-                return
-        except ValueError:
-            messagebox.showwarning("Ошибка", "Неверный формат даты. Используйте ГГГГ-ММ-ДД")
+    def plot_calories(self):
+        start = self.start_date.get_date()
+        end = self.end_date.get_date()
+        if start > end:
+            self.error_label.configure(text="Ошибка: начальная дата позже конечной")
             return
 
         data = self.controller.get_calories_for_range(start, end)
         if not data:
-            self.ax.clear()
-            self.ax.text(0.5, 0.5, "Нет данных за выбранный период", ha="center", va="center")
-            self.canvas.draw()
+            self.error_label.configure(text="Нет данных за выбранный период")
             return
 
-        dates = [item["date"] for item in data]
-        calories = [item["total_calories"] for item in data]
+        # Очищаем старый график
+        for widget in self.figure_frame.winfo_children():
+            widget.destroy()
 
-        self.ax.clear()
-        self.ax.bar(dates, calories, color='skyblue', edgecolor='navy')
-        self.ax.set_xlabel("Дата")
-        self.ax.set_ylabel("Калории (ккал)")
-        self.ax.set_title("Потребление калорий по дням")
-        plt.setp(self.ax.get_xticklabels(), rotation=45, ha="right")
-        self.figure.tight_layout()
-        self.canvas.draw()
+        # Создаём новый график
+        fig = Figure(figsize=(8, 4), dpi=100)
+        ax = fig.add_subplot(111)
+
+        dates = [d["date"] for d in data]
+        calories = [d["total_calories"] for d in data]
+
+        ax.bar(dates, calories, color='skyblue', edgecolor='navy')
+        ax.set_xlabel("Дата")
+        ax.set_ylabel("Калории (ккал)")
+        ax.set_title("Потребление калорий по дням")
+        ax.tick_params(axis='x', rotation=45)
+
+        canvas = FigureCanvasTkAgg(fig, master=self.figure_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill="both", expand=True)
+
+        self.error_label.configure(text="")
