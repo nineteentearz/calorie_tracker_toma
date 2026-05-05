@@ -1,4 +1,4 @@
-from uuid import uuid4
+from uuid import UUID, uuid4
 from datetime import datetime
 from typing import List
 from ..domain.models import Product
@@ -14,7 +14,6 @@ class ProductService:
             raise ValidationError("Название продукта не может быть пустым")
         if calories_per_unit <= 0:
             raise ValidationError("Калорийность должна быть положительным числом")
-        # Проверка уникальности
         existing = self.product_repo.get_by_name(name)
         if existing:
             raise ValidationError(f"Продукт с именем '{name}' уже существует")
@@ -34,7 +33,6 @@ class ProductService:
         product = self.product_repo.get_by_id(product_id)
         if not product:
             raise NotFoundError("Продукт не найден")
-        # Проверка уникальности имени, исключая текущий
         existing = self.product_repo.get_by_name(name)
         if existing and existing.id != product_id:
             raise ValidationError(f"Продукт с именем '{name}' уже существует")
