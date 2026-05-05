@@ -3,6 +3,7 @@ from .dashboard import DashboardView
 from .meal_entry import MealEntryView
 from .report_view import ReportView
 from .profile_view import ProfileView
+from .products_view import ProductsView
 
 
 class MainWindow(ctk.CTk):
@@ -25,12 +26,15 @@ class MainWindow(ctk.CTk):
         self.tabview.add("🍽️ Добавить приём пищи")
         self.tabview.add("📈 Диаграмма калорий")
         self.tabview.add("👤 Профиль")
+        self.tabview.add("📦 Продукты")
 
         # Инициализируем виджеты каждой вкладки
         self.dashboard = DashboardView(self.tabview.tab("📊 Прогресс"), self.controller)
         self.meal_entry = MealEntryView(self.tabview.tab("🍽️ Добавить приём пищи"), self.controller)
         self.report = ReportView(self.tabview.tab("📈 Диаграмма калорий"), self.controller)
         self.profile = ProfileView(self.tabview.tab("👤 Профиль"), self.controller)
+        self.products_view = ProductsView(self.tabview.tab("📦 Продукты"), self.controller)
+
 
         # Переключатель темы (в правом верхнем углу)
         self.theme_switch = ctk.CTkSwitch(

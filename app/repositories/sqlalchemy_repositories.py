@@ -161,3 +161,92 @@ class SQLAlchemyMealEntryRepository(MealEntryRepository):
             ]
         except Exception as e:
             raise RepositoryError(f"Database error: {e}")
+        
+    
+    class SQLAlchemyProductRepository(ProductRepository):
+        def __init__(self, session: Session):
+            self.session = session
+
+        @retry(stop=stop_after_attempt(DB_RETRY_MAX), wait=wait_fixed(DB_RETRY_WAIT))
+        def add(self, product: Product) -> None:
+            try:
+                product_model = ProductModel(
+                    id=str(product.id),
+                    name=product.name,
+                    calories_per_unit=product.calories_per_unit,
+                    created_at=product.created_at
+                )
+                self.session.add(product_model)
+                self.session.commit()
+            except Exception as e:
+                self.session.rollback()
+                logger.error(f"Failed to add product: {e}")
+                raise RepositoryError(f"Database error: {e}")
+
+        @retry(stop=stop_after_attempt(DB_RETRY_MAX), wait=wait_fixed(DB_RETRY_WAIT))
+        def get_by_id(self, product_id: UUID) -> Optional[Product]:
+            try:
+                model = self.session.query(ProductModel).filter(ProductModel.id == str(product_id)).first()
+                if not model:
+                    return None
+                return Product(
+                    id=UUID(model.id),
+                    name=model.name,
+                    calories_per_unit=model.calories_per_unit,
+                    created_at=model.created_at
+                )
+            except Exception as e:
+                raise RepositoryError(f"Database error: {e}")
+
+        @retry(stop=stop_after_attempt(DB_RETRY_MAX), wait=wait_fixed(DB_RETRY_WAIT))
+        def get_by_name(self, name: str) -> Optional[Product]:
+            try:
+                model = self.session.query(ProductModel).filter(ProductModel.name == name).first()
+                if not model:
+                    return None
+                return Product(
+                    id=UUID(model.id),
+                    name=model.name,
+                    calories_per_unit=model.calories_per_unit,
+                    created_at=model.created_at
+                )
+            except Exception as e:
+                raise RepositoryError(f"Database error: {e}")
+
+        @retry(stop=stop_after_attempt(DB_RETRY_MAX), wait=wait_fixed(DB_RETRY_WAIT))
+        def get_all(self) -> List[Product]:
+            try:
+                models = self.session.query(ProductModel).order_by(ProductModel.name).all()
+                return [
+                    Product(
+                        id=UUID(m.id),
+                        name=m.name,
+                        calories_per_unit=m.calories_per_unit,
+                        created_at=m.created_at
+                    ) for m in models
+                ]
+            except Exception as e:
+                raise RepositoryError(f"Database error: {e}")
+
+        @retry(stop=stop_after_attempt(DB_RETRY_MAX), wait=wait_fixed(DB_RETRY_WAIT))
+        def update(self, product: Product) -> None:
+            try:
+                model = self.session.query(ProductModel).filter(ProductModel.id == str(product.id)).first()
+                if model:
+                    model.name = product.name
+                    model.calories_per_unit = product.calories_per_unit
+                    self.session.commit()
+            except Exception as e:
+                self.session.rollback()
+                raise RepositoryError(f"Database error: {e}")
+
+        @retry(stop=stop_after_attempt(DB_RETRY_MAX), wait=wait_fixed(DB_RETRY_WAIT))
+        def delete(self, product_id: UUID) -> None:
+            try:
+                model = self.session.query(ProductModel).filter(ProductModel.id == str(product_id)).first()
+                if model:
+                    self.session.delete(model)
+                    self.session.commit()
+            except Exception as e:
+                self.session.rollback()
+                raise RepositoryError(f"Database error: {e}")

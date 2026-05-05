@@ -1,8 +1,7 @@
 import customtkinter as ctk
 
-
 class ProfileView(ctk.CTkFrame):
-    """Вкладка профиля: просмотр и редактирование данных пользователя."""
+    """Вкладка профиля: просмотр и редактирование с автоматическим расчётом дневной нормы калорий."""
 
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -25,6 +24,7 @@ class ProfileView(ctk.CTkFrame):
         self.email_value = ctk.CTkLabel(self, text="", font=ctk.CTkFont(size=14))
         self.email_value.pack()
 
+        # --- Параметры для расчёта BMR/TDEE ---
         # Рост
         self.height_label = ctk.CTkLabel(self, text="Рост (см):", font=ctk.CTkFont(size=14))
         self.height_label.pack(pady=(10, 0))
@@ -46,11 +46,40 @@ class ProfileView(ctk.CTkFrame):
         # Пол
         self.gender_label = ctk.CTkLabel(self, text="Пол:", font=ctk.CTkFont(size=14))
         self.gender_label.pack(pady=(10, 0))
-        self.gender_menu = ctk.CTkOptionMenu(self, values=["male", "female", "other"], width=200)
+        self.gender_menu = ctk.CTkOptionMenu(self, values=["male", "female"], width=200)
         self.gender_menu.pack()
 
-        # Дневная цель калорий
-        self.goal_label = ctk.CTkLabel(self, text="Дневная цель калорий:", font=ctk.CTkFont(size=14))
+        # Уровень активности
+        self.activity_label = ctk.CTkLabel(self, text="Уровень активности:", font=ctk.CTkFont(size=14))
+        self.activity_label.pack(pady=(10, 0))
+        self.activity_menu = ctk.CTkOptionMenu(
+            self,
+            values=[
+                "Сидячий (1.2)",
+                "Лёгкий (1.375)",
+                "Средний (1.55)",
+                "Высокий (1.725)"
+            ],
+            width=200
+        )
+        self.activity_menu.pack()
+
+        # Цель
+        self.goal_type_label = ctk.CTkLabel(self, text="Цель:", font=ctk.CTkFont(size=14))
+        self.goal_type_label.pack(pady=(10, 0))
+        self.goal_menu = ctk.CTkOptionMenu(
+            self,
+            values=["Похудение", "Поддержание", "Набор массы"],
+            width=200
+        )
+        self.goal_menu.pack()
+
+        # Кнопка "Рассчитать и установить цель"
+        self.calc_btn = ctk.CTkButton(self, text="Рассчитать дневную норму", command=self.calculate_goal, fg_color="#2ecc71")
+        self.calc_btn.pack(pady=15)
+
+        # Дневная цель калорий (можно и вручную)
+        self.goal_label = ctk.CTkLabel(self, text="Дневная цель калорий (ккал):", font=ctk.CTkFont(size=14))
         self.goal_label.pack(pady=(10, 0))
         self.goal_entry = ctk.CTkEntry(self, width=200)
         self.goal_entry.pack()
@@ -77,6 +106,48 @@ class ProfileView(ctk.CTkFrame):
             self.gender_menu.set(profile.get("gender") or "male")
             self.goal_entry.delete(0, 'end')
             self.goal_entry.insert(0, str(profile.get("daily_calorie_goal", 2000)))
+            # Загружаем активность и цель из сохранённых? Пока не сохраняем, оставим по умолчанию.
+
+    def calculate_goal(self):
+        """Рассчитывает дневную норму калорий на основе введённых параметров и цели."""
+        try:
+            height = float(self.height_entry.get())
+            weight = float(self.weight_entry.get())
+            age = int(self.age_entry.get())
+        except ValueError:
+            self.show_message("Заполните рост, вес и возраст корректными числами", "red")
+            return
+
+        gender = self.gender_menu.get()
+        # BMR по формуле Миффлина-Сан-Жеора
+        if gender == "male":
+            bmr = 10 * weight + 6.25 * height - 5 * age + 5
+        else:
+            bmr = 10 * weight + 6.25 * height - 5 * age - 161
+
+        # Коэффициент активности
+        activity_map = {
+            "Сидячий (1.2)": 1.2,
+            "Лёгкий (1.375)": 1.375,
+            "Средний (1.55)": 1.55,
+            "Высокий (1.725)": 1.725
+        }
+        activity = activity_map.get(self.activity_menu.get(), 1.2)
+        tdee = bmr * activity
+
+        # Корректировка по цели
+        goal = self.goal_menu.get()
+        if goal == "Похудение":
+            suggested = tdee * 0.85  # дефицит 15%
+        elif goal == "Набор массы":
+            suggested = tdee * 1.10  # профицит 10%
+        else:
+            suggested = tdee
+
+        suggested = round(suggested, 0)
+        self.goal_entry.delete(0, 'end')
+        self.goal_entry.insert(0, str(int(suggested)))
+        self.show_message(f"Рекомендуемая дневная норма: {int(suggested)} ккал", "green")
 
     def save_profile(self):
         updates = {}
@@ -111,7 +182,7 @@ class ProfileView(ctk.CTkFrame):
             success = self.controller.update_profile(**updates)
             if success:
                 self.show_message("Профиль обновлён", "green")
-                # Если изменили цель, обновим dashboard? можно, но пусть пользователь переключит вкладку.
+                # Обновляем dashboard, если нужно, можно вызвать метод обновления прогресса
             else:
                 self.show_message("Ошибка при обновлении профиля", "red")
         except ValueError as e:

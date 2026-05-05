@@ -27,6 +27,14 @@ class ProfileModel(Base):
 
     user = relationship("UserModel", back_populates="profile")
 
+
+class ProductModel(Base):
+    __tablename__ = "products"
+    id = Column(String, primary_key=True, default=lambda: str(uuid4()))
+    name = Column(String, unique=True, nullable=False)
+    calories_per_unit = Column(Integer, nullable=False)  # калорий на порцию/100г
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 class MealEntryModel(Base):
     __tablename__ = "meal_entries"
     id = Column(String, primary_key=True, default=lambda: str(uuid4()))

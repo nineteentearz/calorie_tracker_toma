@@ -10,12 +10,14 @@ from ..repositories.database import SessionLocal
 from ..repositories.sqlalchemy_repositories import (
     SQLAlchemyUserRepository,
     SQLAlchemyProfileRepository,
-    SQLAlchemyMealEntryRepository
+    SQLAlchemyMealEntryRepository,
+    SQLAlchemyProductRepository
 )
 from ..services.auth_service import AuthService
 from ..services.user_service import UserService
 from ..services.calorie_service import CalorieService
 from ..services.progress_service import ProgressService
+from ..services.product_service import ProductService
 from ..utils.session import save_current_user_id, get_current_user_id, clear_session
 from ..utils.exceptions import (
     AuthenticationError, UserAlreadyExistsError,
@@ -33,11 +35,13 @@ class AppController:
         self.user_repo = SQLAlchemyUserRepository(self.db_session)
         self.profile_repo = SQLAlchemyProfileRepository(self.db_session)
         self.meal_repo = SQLAlchemyMealEntryRepository(self.db_session)
+        self.product_repo = SQLAlchemyProductRepository(self.db_session)
 
         self.auth_service = AuthService(self.user_repo, self.profile_repo)
         self.user_service = UserService(self.user_repo, self.profile_repo)
         self.calorie_service = CalorieService(self.meal_repo)
         self.progress_service = ProgressService(self.meal_repo, self.profile_repo)
+        self.product_service = ProductService(self.product_repo)
 
         self._current_user_id: Optional[UUID] = None
 
@@ -70,7 +74,6 @@ class AppController:
         """Проверяет, есть ли активная сессия (при запуске)."""
         user_id = get_current_user_id()
         if user_id:
-            # Проверяем, существует ли пользователь в БД (на всякий случай)
             user = self.user_repo.get_by_id(user_id)
             if user:
                 self._current_user_id = user_id
@@ -153,6 +156,23 @@ class AppController:
             self.db_session.rollback()
             logger.error(f"Set goal error: {e}")
             return False
+
+    # --- Методы для работы с продуктами ---
+    def get_all_products(self):
+        """Возвращает список всех продуктов."""
+        return self.product_service.get_all_products()
+
+    def create_product(self, name: str, calories: int):
+        """Создаёт новый продукт."""
+        return self.product_service.create_product(name, calories)
+
+    def update_product(self, product_id: UUID, name: str, calories: int):
+        """Обновляет существующий продукт."""
+        return self.product_service.update_product(product_id, name, calories)
+
+    def delete_product(self, product_id: UUID):
+        """Удаляет продукт по ID."""
+        self.product_service.delete_product(product_id)
 
     def close(self):
         """Закрывает сессию БД при завершении приложения."""

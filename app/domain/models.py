@@ -29,3 +29,10 @@ class MealEntry:
     calories: int
     date: datetime
     created_at: datetime
+
+@dataclass
+class Product:
+    id: UUID
+    name: str
+    calories_per_unit: int
+    created_at: datetime

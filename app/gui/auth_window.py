@@ -2,9 +2,9 @@ import customtkinter as ctk
 from .controllers import AppController
 from .main_window import MainWindow
 
-ctk.set_appearance_mode("dark")  # можно "light" или "dark"
-ctk.set_default_color_theme("blue")
-
+# Устанавливаем тему и цветовую схему
+ctk.set_appearance_mode("dark")   # можно "light"
+ctk.set_default_color_theme("green")  # зелёная гамма
 
 class AuthWindow(ctk.CTk):
     """Окно аутентификации (логин и регистрация)."""
@@ -13,7 +13,7 @@ class AuthWindow(ctk.CTk):
         super().__init__()
         self.controller = controller
         self.title("Calorie Tracker - Вход")
-        self.geometry("400x500")
+        self.geometry("450x550")
         self.resizable(False, False)
 
         # Переменные для полей
@@ -33,32 +33,44 @@ class AuthWindow(ctk.CTk):
 
         # Поле email
         self.email_entry = ctk.CTkEntry(
-            self.frame, placeholder_text="Email", textvariable=self.email_var, width=250
+            self.frame, placeholder_text="Email", textvariable=self.email_var, width=300
         )
         self.email_entry.pack(pady=10)
+        self.email_hint = ctk.CTkLabel(
+            self.frame, text="Введите ваш email", font=ctk.CTkFont(size=11), text_color="gray"
+        )
+        self.email_hint.pack(pady=(0, 5))
 
         # Поле пароль
         self.password_entry = ctk.CTkEntry(
             self.frame, placeholder_text="Пароль", textvariable=self.password_var,
-            show="*", width=250
+            show="*", width=300
         )
         self.password_entry.pack(pady=10)
+        self.pass_hint = ctk.CTkLabel(
+            self.frame, text="Пароль должен содержать не менее 6 символов",
+            font=ctk.CTkFont(size=11), text_color="gray"
+        )
+        self.pass_hint.pack(pady=(0, 5))
 
         # Поле подтверждения пароля (только для регистрации)
         self.confirm_entry = ctk.CTkEntry(
             self.frame, placeholder_text="Подтвердите пароль", textvariable=self.confirm_var,
-            show="*", width=250
+            show="*", width=300
+        )
+        self.confirm_hint = ctk.CTkLabel(
+            self.frame, text="Повторите пароль", font=ctk.CTkFont(size=11), text_color="gray"
         )
 
         # Кнопки
         self.login_btn = ctk.CTkButton(
-            self.frame, text="Войти", command=self.login_action, width=250
+            self.frame, text="Войти", command=self.login_action, width=300, fg_color="#2ecc71"
         )
         self.login_btn.pack(pady=10)
 
         self.register_btn = ctk.CTkButton(
             self.frame, text="Регистрация", command=self.register_action,
-            fg_color="transparent", border_width=2, width=250
+            fg_color="transparent", border_width=2, width=300
         )
         self.register_btn.pack(pady=5)
 
@@ -73,11 +85,13 @@ class AuthWindow(ctk.CTk):
         self.is_register_mode = enable
         if enable:
             self.confirm_entry.pack(pady=5)
+            self.confirm_hint.pack(pady=(0, 5))
             self.login_btn.configure(text="Зарегистрироваться")
             self.register_btn.configure(text="Назад ко входу")
             self.label_title.configure(text="Регистрация")
         else:
             self.confirm_entry.pack_forget()
+            self.confirm_hint.pack_forget()
             self.login_btn.configure(text="Войти")
             self.register_btn.configure(text="Регистрация")
             self.label_title.configure(text="Calorie Tracker - Вход")
@@ -91,6 +105,9 @@ class AuthWindow(ctk.CTk):
             confirm = self.confirm_var.get()
             if not email or not password:
                 self.message_label.configure(text="Заполните все поля")
+                return
+            if len(password) < 6:
+                self.message_label.configure(text="Пароль должен быть не менее 6 символов")
                 return
             if password != confirm:
                 self.message_label.configure(text="Пароли не совпадают")
@@ -112,7 +129,7 @@ class AuthWindow(ctk.CTk):
                 return
             success = self.controller.login(email, password)
             if success:
-                self.destroy()  # закрываем окно авторизации
+                self.destroy()
                 main_app = MainWindow(self.controller)
                 main_app.mainloop()
             else:
@@ -124,20 +141,12 @@ class AuthWindow(ctk.CTk):
         else:
             self.toggle_register_mode(True)
 
-
 def run_auth():
-    """Запускает окно авторизации."""
     controller = AppController()
-    # Проверяем, есть ли сохранённая сессия
     if controller.is_authenticated():
-        # Сразу открываем главное окно
         main_app = MainWindow(controller)
         main_app.mainloop()
     else:
         auth_win = AuthWindow(controller)
         auth_win.mainloop()
     controller.close()
-
-
-if __name__ == "__main__":
-    run_auth()
