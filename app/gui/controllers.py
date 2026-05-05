@@ -160,6 +160,8 @@ class AppController:
     # --- Методы для работы с продуктами ---
     def get_all_products(self):
         """Возвращает список всех продуктов."""
+        if not self._current_user_id:
+            return []
         return self.product_service.get_all_products()
 
     def create_product(self, name: str, calories: int):
@@ -171,7 +173,7 @@ class AppController:
         return self.product_service.update_product(product_id, name, calories)
 
     def delete_product(self, product_id: UUID):
-        """Удаляет продукт по ID."""
+        """Удаляет продукт."""
         self.product_service.delete_product(product_id)
 
     def close(self):

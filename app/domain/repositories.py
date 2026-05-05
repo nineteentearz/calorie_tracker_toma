@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 from uuid import UUID
 from datetime import date
-from .models import User, Profile, MealEntry
+from .models import User, Profile, MealEntry, Product
 
 class UserRepository(ABC):
     @abstractmethod
