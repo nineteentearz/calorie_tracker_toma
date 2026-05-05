@@ -1,11 +1,39 @@
+# venv
+.venv/
 venv/
+env/
+
+# python
 __pycache__/
-*.pyc
+*.py[cod]
+
+# database
 *.db
+*.sqlite
+*.sqlite3
 .session
+
+# logs
 *.log
+
+# env
 .env
-.DS_Store
+.env.*
+
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# build
 *.egg-info/
 dist/
 build/
+
+# ide
+.vscode/
+.idea/
+
+# lint
+.markdownlint.yml
